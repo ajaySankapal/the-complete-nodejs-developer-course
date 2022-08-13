@@ -1,0 +1,15 @@
+{
+  "name": "4.Weather-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "1.basics-of-asynchrounous-js.js.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "postman-request": "^2.88.1-postman.31"
+  }
+}

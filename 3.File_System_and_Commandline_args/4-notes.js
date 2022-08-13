@@ -6,6 +6,7 @@ const color = require("colors");
 const addNote = (title, body) => {
   const notes = loadNotes();
   const duplicateNotes = notes.filter((note) => note.title === title);
+
   if (duplicateNotes.length === 0) {
     notes.push({
       title: title,
