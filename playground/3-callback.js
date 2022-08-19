@@ -45,5 +45,16 @@
 // add(1, 4, (sum) => {
 //   console.log(sum); // Should print: 5
 // });
-const ans = process.argv[2];
-console.log(ans);
+
+const doWorkCallback = (callback) => {
+  setTimeout(() => {
+    callback("There is some error!", undefined);
+    callback(undefined, [11, 4, 5]);
+  }, 2000);
+};
+doWorkCallback((error, result) => {
+  if (error) {
+    return console.log(error);
+  }
+  console.log(result);
+});
