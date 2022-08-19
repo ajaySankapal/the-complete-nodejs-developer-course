@@ -1,0 +1,10 @@
+//In task manager code there is a lot of code in the same file which can be slightly confusing.. we can have the separate router for our user and task
+
+//create new router
+const router = new express.Router();
+router.get("/test", (req, res) => {
+  res.send("Hello from the other router!");
+});
+
+//this will not work unless we register it.. we can do so by -
+app.use(router);

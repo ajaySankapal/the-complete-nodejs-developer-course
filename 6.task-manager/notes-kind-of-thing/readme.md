@@ -13,3 +13,23 @@
 ###### mongoose - mongoose is used for creating models.. a model allows us to model something in real world,,that we want to store in the database...it could be a "user", a "Task" or "student"
 
 ###### ODM - Object Document Mapper -- map objects in the code
+
+#### router
+
+##### In task manager code there is a lot of code in the same file which can be slightly confusing.. we can have the separate router for our user and task
+
+###### create new router
+
+###### const router = new express.Router()
+
+###### router have access to the same methods we have for app
+
+###### router.get("/test",(req,res)=>{
+
+###### res.send("Hello from the other router!")
+
+###### })
+
+###### this router will not work unless we register it .. we can do this by -
+
+###### app.use(router)
