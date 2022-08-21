@@ -1,0 +1,20 @@
+
+const jwt = require("jsonwebtoken");
+//every route we have define will be fall under two categories -- one will be public(login and signup(create user)) and other will be private(delete,update,create task,get tasks,update task)
+const myFunc = async () => {
+  //jwt.sign() --- will return a token which we will use to perform those previledged tasks
+  //the sign function accept to arguements -- one is object(object is a data embedded in our token..unique identifier for the user who is being authenticated) and other is string
+  //the second arguement the string is the secret ,this is gonna be use to sign the token , to make sure it hasn't been tempered or altered in any way... we will provide series of random string
+
+  //the whole point of jwt is to provide the data (the data that we passed as first arguement), that can be verified by the secret string
+  //so if someone try to change the data ,,they are not able to do so successfully because they don't know what is the secret key is
+  const token = await jwt.sign({ _id: "abc123 " }, "thisismynewnodeapp", {
+    expiresIn: "7 days",
+  });
+  console.log(token);
+
+  //now how to verify the token -- by using the verify method available on jwt
+  const data = jwt.verify(token, "thisismynewnodeapp");
+  console.log(data);
+};
+myFunc();

@@ -33,3 +33,25 @@
 ###### this router will not work unless we register it .. we can do this by -
 
 ###### app.use(router)
+
+###### mongoose support which is known as middleware. Customize the behaviour of our mongoose model
+
+###### with middleware we can register some function that we can perform before or after the event occurs
+
+###### to hash the password our job is to register the middleware with function which will run just before we save the model(user)
+
+###### when we are defining the model of user and pass the attributes of that model as object.. mongoose convert that object into the schema behind the scenes... in order to take the advantage of the middleware we define schema first and then pass that schema as second arguement when we are defining the model(user).. we can do this by
+
+###### -> const userSchema = new mongoose.Schema({ //the object that we are passing as the second arguement prior })
+
+###### : now we can take advantage of the middleware
+
+###### userSchema.pre //doing something before an event .... userSchema.post // doing sth after an event
+
+###### userSchema.pre("save",async function(){ //the first arguement is the name of the event on which we want to trigger our function,,, second arguement will have to be standard function because of the this binding
+
+######
+
+###### })
+
+###### const User = mongoose.model("User",userSchema)

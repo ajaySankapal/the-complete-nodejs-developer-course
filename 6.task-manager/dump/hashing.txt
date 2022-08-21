@@ -1,0 +1,14 @@
+const bcrypt = require("bcryptjs");
+
+const myFunc = async () => {
+  const password = "red@123!";
+  const hashedPassword = await bcrypt.hash(password, 8);
+  //8 is the number of round the hashing algorithm will work on password
+  //2-3 round of hashing algorithm can be easy to crack the password.. so it is advised to perform 8 number of rounds by the developer of the algorithm itself
+  //hashing algorithms are one way algorithm .. we can't revert back the process
+  console.log(password);
+  console.log(hashedPassword);
+  const isMatch = await bcrypt.compare("Red@123!", hashedPassword);
+  console.log(isMatch);
+};
+myFunc();

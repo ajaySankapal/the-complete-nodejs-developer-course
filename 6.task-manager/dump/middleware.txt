@@ -1,0 +1,11 @@
+//without middleware: new-request --> run route handler
+//with middleware: new request --> do something(we can check if the user is authenticated or not then only we allow to run the route handler) --> run route handler
+//registering the middleware
+// app.use((req, res, next) => {
+//   //if we don't provide next our app got stuck with the same middleware... next() allow the app to run next middleware
+//   if (req.method === "GET") {
+//     res.send("GET requests are disabled!");
+//   } else {
+//     next();
+//   }
+// });

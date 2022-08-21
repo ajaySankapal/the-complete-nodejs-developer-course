@@ -1,27 +1,80 @@
 const express = require("express");
+const auth = require("../middleware/auth");
+
 const router = new express.Router();
 const User = require("../models/user");
 
+//create user
 router.post("/users", async (req, res) => {
   const user = new User(req.body);
   try {
+    //no need to generate the token before save because the generateAuthToken also had the code to save the user
     await user.save();
-    res.status(201).send(user);
+    const token = await user.generateAuthToken();
+
+    res.status(201).send({ user, token });
   } catch (error) {
     res.status(400);
     res.send(error);
   }
 });
-
-//get all the users
-router.get("/users", async (req, res) => {
-  //User is the name of the model.. we can perform varios methods on this model....there is a find method if we provide empty object it will return all the users
+//login user
+router.post("/users/login", async (req, res) => {
   try {
-    const users = await User.find({});
-    res.send(users);
+    //here we are invoking our own method on the user model ... so we have to define this model in the user model.. we can do so by defining it in the user schema.. userSchema.statics.findByCredentials = function(....)
+    const user = await User.findByCredentials(
+      req.body.email,
+      req.body.password
+    );
+    const token = await user.generateAuthToken();
+    //user is logged in if the user has this token
+    //we can maintain this tokens.. bcz if the user tries to login through diffrente devices and if logout from one of them it will be logged in on other devices
+    //we can do this by providing the separate field for the token in the user model and save it to the database
+    // res.send({ user: user.getPublicProfile(), token });
+    res.send(user, token);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+//logout the user
+router.post("/users/logout", auth, async (req, res) => {
+  try {
+    //we access the tokens array and remove(filter out the token)
+    req.user.tokens = req.user.tokens.filter((token) => {
+      return token.token !== req.token;
+    });
+    //now if you have deleted the token save the user with new data
+    await req.user.save();
+    res.send();
   } catch (e) {
     res.status(500).send();
   }
+});
+
+//logoutAll
+router.post("/users/logoutAll", auth, async (req, res) => {
+  try {
+    req.user.tokens = [];
+    await req.user.save();
+    res.send();
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+//get all the users
+// router.get("/users", auth, async (req, res) => {
+//   //User is the name of the model.. we can perform varios methods on this model....there is a find method if we provide empty object it will return all the users
+//   try {
+//     const users = await User.find({});
+//     res.send(users);
+//   } catch (e) {
+//     res.status(500).send();
+//   }
+// }); //here with this route we are getting all the users which is not that is practiced as we are getting all the users email and password ... so after authenticating we are advised to get only the user self profile
+router.get("/users/me", auth, async (req, res) => {
+  res.send(req.user);
 });
 
 //get single user by providing id
@@ -54,10 +107,18 @@ router.patch("/users/:id", async (req, res) => {
     return res.status(400).send({ error: "Invalid update!" });
   }
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
+    //findByIdAndUpdate -- bypasses mongoose and perforn direct operation on the database
+    //bracket notation??
+
+    // const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    //   new: true,
+    //   runValidators: true,
+    // });
+    const user = await User.findById(req.params.id);
+    updates.forEach((update) => {
+      user[update] = req.body[update];
     });
+    await user.save();
     if (!user) {
       return res.status(404).send();
     }
