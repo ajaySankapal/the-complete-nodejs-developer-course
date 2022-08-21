@@ -31,7 +31,7 @@ router.post("/users/login", async (req, res) => {
     //we can maintain this tokens.. bcz if the user tries to login through diffrente devices and if logout from one of them it will be logged in on other devices
     //we can do this by providing the separate field for the token in the user model and save it to the database
     // res.send({ user: user.getPublicProfile(), token });
-    res.send(user, token);
+    res.send({ user, token });
   } catch (e) {
     res.status(400).send(e);
   }
@@ -93,7 +93,7 @@ router.get("/users/:id", async (req, res) => {
 });
 
 //update the user by providing id in the req params
-router.patch("/users/:id", async (req, res) => {
+router.patch("/users/me", auth, async (req, res) => {
   // req.params.id will provide us the id in the url.... the thing we want to update we are passing us req.body because will provide the update in the body in the json format just like we created the user
   //when we are setting new: true we are returning completely new user by updating the desired fields
 
@@ -114,27 +114,28 @@ router.patch("/users/:id", async (req, res) => {
     //   new: true,
     //   runValidators: true,
     // });
-    const user = await User.findById(req.params.id);
+    // const user = await User.findById(req.user._id);
     updates.forEach((update) => {
-      user[update] = req.body[update];
+      req.user[update] = req.body[update];
     });
-    await user.save();
-    if (!user) {
-      return res.status(404).send();
-    }
-    res.send(user);
+    await req.user.save();
+    // if (!user) {
+    //   return res.status(404).send();
+    // }
+    res.send(req.user);
   } catch (e) {
     res.status(400).send(e);
   }
 });
-//deleting the user
-router.delete("/users/:id", async (req, res) => {
+//deleting the user //we can't delete the other user,, we can only delete our own profile so refactoring this request
+router.delete("/users/me", auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) {
-      return res.status(404).send();
-    }
-    res.send(user);
+    // const user = await User.findByIdAndDelete(req.user._id);
+    // if (!user) {
+    //   return res.status(404).send();
+    // }
+    await req.user.remove();
+    res.send(req.user);
   } catch (e) {
     res.status(500).send(e);
   }
