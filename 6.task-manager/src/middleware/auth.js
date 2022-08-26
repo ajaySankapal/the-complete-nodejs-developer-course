@@ -5,7 +5,7 @@ const auth = async (req, res, next) => {
   try {
     const token = req.header("Authorization").replace("Bearer ", "");
     //now we have to verify the token
-    const decoded = jwt.verify(token, "thisismynewnodeapp");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     //decoded is the payload which contains the id(the same id which the user has) we generated during the generateAuthToken... so we can get the user by this decoded.id
     //we also has to check the user has the token present at the time we are making this request because when we are logging out the user we will have to delete the tokens so to return the user by authenticating it make sure it has the token present there
     const user = await User.findOne({

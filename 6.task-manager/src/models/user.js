@@ -2,57 +2,71 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Task = require("./task");
 
 //creation of the schema... this is also done by the mongoose behind the scene... by defining userSchema explicitely we can take advantage of the middlewares... by middleware we can perform some function based on before or after some event
-const userSchema = mongoose.Schema({
-  name: {
-    type: String,
-    trim: true,
-    required: true,
-  },
-  email: {
-    type: String,
-    unique: true,
-    trim: true,
-    lowercase: true,
-    validate(value) {
-      if (!validator.isEmail(value)) {
-        throw new Error("Email is invalid!");
-      }
+const userSchema = mongoose.Schema(
+  {
+    name: {
+      type: String,
+      trim: true,
+      required: true,
     },
-  },
-  password: {
-    type: String,
-    required: true,
-    minLength: 7,
-    trim: true,
-    validate(value) {
-      // if (validator.equals(value, "password")) {
-      //   throw new Error(`Password can not be "password"!!`);
-      // }
-      if (value.toLowerCase().includes("password")) {
-        throw new Error(`Password cannot contain "password"`);
-      }
-    },
-  },
-
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
+    email: {
+      type: String,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Email is invalid!");
+        }
       },
     },
-  ],
-  age: {
-    type: Number,
-    default: 0,
-    validate(value) {
-      if (value < 0) {
-        throw new Error("Age must be a positive number");
-      }
+    password: {
+      type: String,
+      required: true,
+      minLength: 7,
+      trim: true,
+      validate(value) {
+        // if (validator.equals(value, "password")) {
+        //   throw new Error(`Password can no   t be "password"!!`);
+        // }
+        if (value.toLowerCase().includes("password")) {
+          throw new Error(`Password cannot contain "password"`);
+        }
+      },
+    },
+    age: {
+      type: Number,
+      default: 0,
+      validate(value) {
+        if (value < 0) {
+          throw new Error("Age must be a positive number");
+        }
+      },
+    },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    avatar: {
+      type: Buffer,
     },
   },
+  {
+    timestamps: true,
+  }
+);
+
+userSchema.virtual("tasks", {
+  ref: "Task",
+  localField: "_id",
+  foreignField: "owner",
 });
 //instance methods
 //when we pass the object in the res.send ...it calls JSON.strigify(object) behind the scene
@@ -75,7 +89,10 @@ userSchema.methods.toJSON = function () {
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  const token = jwt.sign({ _id: user._id.toString() }, "thisismynewnodeapp");
+  const token = jwt.sign(
+    { _id: user._id.toString() },
+    process.env.JWT_SECRET_KEY
+  );
   //append the token in the tokens array and save it
   user.tokens = user.tokens.concat({ token });
   await user.save();
@@ -103,6 +120,12 @@ userSchema.pre("save", async function (next) {
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, 8);
   }
+  next();
+});
+//when deleting the user... delete its task also
+userSchema.pre("remove", async function (next) {
+  const user = this;
+  await Task.deleteMany({ owner: user._id });
   next();
 });
 

@@ -1,15 +1,20 @@
 const express = require("express");
 const auth = require("../middleware/auth");
-
+const multer = require("multer");
+const sharp = require("sharp");
 const router = new express.Router();
 const User = require("../models/user");
-
+const {
+  sendWelcomeEmail,
+  sendCancellationEmail,
+} = require("../emails/accounts");
 //create user
 router.post("/users", async (req, res) => {
   const user = new User(req.body);
   try {
     //no need to generate the token before save because the generateAuthToken also had the code to save the user
     await user.save();
+    sendWelcomeEmail(user.email, user.name);
     const token = await user.generateAuthToken();
 
     res.status(201).send({ user, token });
@@ -134,10 +139,66 @@ router.delete("/users/me", auth, async (req, res) => {
     // if (!user) {
     //   return res.status(404).send();
     // }
+    const email = req.user.email;
+    const name = req.user.name;
     await req.user.remove();
+    sendCancellationEmail(email, name);
     res.send(req.user);
   } catch (e) {
     res.status(500).send(e);
+  }
+});
+const upload = multer({
+  //destination where the file gonna be saved
+  //we want to store the file in the db in the user schema with the field "avatar"
+  // dest: "avatars",
+  limits: {
+    fileSize: 1000000,
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      cb(new Error("Please upload an image"));
+    }
+    cb(undefined, true);
+  },
+});
+// the value in the request form-data should be matched with the value provided in the quote(arguement)
+router.post(
+  "/users/me/avatars",
+  auth,
+  upload.single("avatar"),
+  async (req, res) => {
+    const buffer = await sharp(req.file.buffer)
+      .resize({ width: 250, height: 250 })
+      .png()
+      .toBuffer();
+    req.user.avatar = buffer;
+    await req.user.save();
+    res.send();
+  },
+  (error, req, res, next) => {
+    res.status(400).send({ error: error.message });
+  }
+);
+
+//delete the avatar
+router.delete("/users/me/avatar", auth, async (req, res) => {
+  req.user.avatar = undefined;
+  await req.user.save();
+  res.send();
+});
+
+//get the avatar image in the response
+router.get("/users/:id/avatar", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user || !user.avatar) {
+      throw new Error();
+    }
+    res.set("Content-Type", "image/png");
+    res.send(user.avatar);
+  } catch (e) {
+    res.status(404).send(e);
   }
 });
 

@@ -1,5 +1,5 @@
-require("../src/db/mongoose");
-const User = require("../src/models/user");
+require("../6.task-manager/src/db/mongoose");
+const User = require("../6.task-manager/src/models/user");
 
 //promise chaining on the models of mongoose
 // User.findByIdAndUpdate("62fcce75a7f414894a68ca74", { age: 21 })
